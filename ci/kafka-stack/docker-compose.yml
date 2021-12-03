@@ -1,0 +1,66 @@
+version: '3.7'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.0
+    container_name: streaming-plat__zookeeper
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  # 9092 port is for external access
+  # 9094 port is for internal access
+  broker-1:
+    image: confluentinc/cp-kafka:7.0.0
+    container_name: streaming-plat__broker
+    ports:
+      - 9092:9092
+    links:
+      - zookeeper
+    environment:
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://broker-1:9094,OUTSIDE://broker-1:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker-1:9094,OUTSIDE://localhost:9092
+      KAFKA_INTER_BROKER_PASSWORD: bitnami
+      KAFKA_INTER_BROKER_USER: admin
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.0.0
+    hostname: schema-registry
+    container_name: streaming-plat__schema-registry
+    depends_on:
+      - broker-1
+    ports:
+      - 8081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "broker-1:9094"
+
+  akhq:
+    image: tchiotludo/akhq:0.18.0
+    container_name: streaming-plat__akhq
+    ports:
+      - 8087:8080
+    links:
+      - broker-1
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "broker-1:9094"
+              schema-registry:
+                url: "http://schema-registry:8081"
+
+
