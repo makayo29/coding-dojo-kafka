@@ -1,3 +1,3 @@
 # coding-dojo-kafka
 
-Repo for dojo condig 
+Repo for coding Dojo
