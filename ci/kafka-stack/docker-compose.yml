@@ -3,7 +3,7 @@ version: '3.7'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.0
-    container_name: streaming-plat__zookeeper
+    container_name: zookeeper
     ports:
       - 2181:2181
       - 2888:2888
@@ -15,7 +15,7 @@ services:
   # 9094 port is for internal access
   broker-1:
     image: confluentinc/cp-kafka:7.0.0
-    container_name: streaming-plat__broker
+    container_name: kafka_broker
     ports:
       - 9092:9092
     links:
@@ -37,7 +37,7 @@ services:
   schema-registry:
     image: confluentinc/cp-schema-registry:7.0.0
     hostname: schema-registry
-    container_name: streaming-plat__schema-registry
+    container_name: schema-registry
     depends_on:
       - broker-1
     ports:
@@ -48,7 +48,7 @@ services:
 
   akhq:
     image: tchiotludo/akhq:0.18.0
-    container_name: streaming-plat__akhq
+    container_name: akhq
     ports:
       - 8087:8080
     links:
